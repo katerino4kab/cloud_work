@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Панель | NeoCloud{% endblock %}
+
+{% block content %}
+<div class="cyber-border p-4 mb-5">
+    <!-- Хлебные крошки с анимацией -->
+    <nav class="cyber-breadcrumb">
+        {% for part in path %}
+            <span class="breadcrumb-item hologram-card">{{ part }}</span>
+            <i class="fas fa-chevron-right mx-2 text-neon"></i>
+        {% endfor %}
+    </nav>
+
+    <!-- 3D индикатор хранилища -->
+    <div class="storage-orb mb-5">
+        <div class="orb-progress" data-percent="{{ storage_percentage }}"></div>
+        <div class="orb-info">
+            <h3>{{ used_storage|filesizeformat }} / {{ total_storage|filesizeformat }}</h3>
+        </div>
+    </div>
+
+    <!-- Голографическая сетка файлов -->
+    <div class="hologrid">
+        {% for folder in subfolders %}
+            <div class="hologram-card folder-card">
+                <div class="card-icon pulse">
+                    <i class="fas fa-folder-open fa-3x"></i>
+                </div>
+                <h5>{{ folder.name }}</h5>
+                <div class="card-actions">
+                    <button class="btn btn-cyber">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        {% endfor %}
+
+        {% for file in files %}
+            <div class="hologram-card file-card">
+                <div class="file-preview">
+                    {% if file.type == 'image' %}
+                        <img src="{{ url_for('preview', id=file.id) }}" 
+                             class="holographic-image">
+                    {% else %}
+                        <i class="fas fa-file-{{ file.type }} fa-3x"></i>
+                    {% endif %}
+                </div>
+                <div class="file-meta">
+                    <span>{{ file.name }}</span>
+                    <small>{{ file.size|filesizeformat }}</small>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
