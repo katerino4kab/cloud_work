@@ -23,6 +23,17 @@
                 </p>
             </div>
 
+            <div class="instructions-section">
+                <h3 class="instructions-heading">Как использовать:</h3>
+                <ol class="instructions-list">
+                    <li>Назвать папку (в формате 1, 2, 3...)</li>
+                    <li>Нажать "Создать"</li>
+                    <li>Выбрать нужное изображение</li>
+                    <li>Выбрать нужную папку</li>
+                    <li>Нажать на кнопку "Загрузить"</li>
+                </ol>
+            </div>
+
             <div class="cta-section">
                 <a href="{{ url_for('files') }}" class="cta-button">
                     <span>Начать сейчас</span>
@@ -97,6 +108,32 @@
     margin-bottom: 1.5rem;
 }
 
+.instructions-section {
+    margin-top: 3rem;
+    padding: 1.5rem;
+    background: rgba(20, 22, 28, 0.5);
+    border-radius: 8px;
+    border: 1px solid rgba(230, 211, 163, 0.2);
+}
+
+.instructions-heading {
+    color: #e6d3a3;
+    font-size: 1.3rem;
+    margin-bottom: 1rem;
+    font-weight: 400;
+}
+
+.instructions-list {
+    color: #d0d0d0;
+    padding-left: 1.5rem;
+    line-height: 1.8;
+    margin: 0;
+}
+
+.instructions-list li {
+    margin-bottom: 0.5rem;
+}
+
 .cta-section {
     margin-top: 4rem;
     text-align: center;
@@ -155,6 +192,18 @@
         padding: 0;
     }
 
+    .instructions-section {
+        padding: 1rem;
+    }
+
+    .instructions-heading {
+        font-size: 1.1rem;
+    }
+
+    .instructions-list {
+        font-size: 0.95rem;
+    }
+
     .cta-button {
         width: 100%;
         padding: 1rem 1.5rem;
@@ -181,6 +230,10 @@
         line-height: 1.6;
     }
 
+    .instructions-section {
+        margin-top: 2rem;
+    }
+
     .cta-section {
         margin-top: 3rem;
     }
@@ -197,6 +250,10 @@
 
     .elegant-paragraph {
         font-size: 0.9rem;
+    }
+
+    .instructions-list {
+        font-size: 0.85rem;
     }
 
     .cta-button {
