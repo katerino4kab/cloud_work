@@ -9,6 +9,7 @@
         <!-- Control Panel -->
         <div class="cyber-panel">
             <!-- Upload Form -->
+            <!-- Upload Form -->
             <form method="POST" enctype="multipart/form-data" class="cyber-form">
                 {{ form.hidden_tag() }}
                 <div class="input-group holographic-border">
@@ -18,19 +19,18 @@
                             {{ form.file(class="cyber-input") }}
                         </label>
 
-                        <!-- Folder Select -->
+                        <!-- Folder Select - только если есть подпапки -->
+                        {% if subfolders %}
                         <div class="folder-select-container">
-                            <select name="target_folder" class="cyber-input" required>
-                                {% set is_root = current_path in ['', '/'] %}
-                                {% if not is_root %}
-                                    <option value="">📁 ТЕКУЩАЯ ПАПКА</option>
-                                {% endif %}
+                            <select name="target_folder" class="cyber-input">
+                                <option value="">📁 ТЕКУЩАЯ ПАПКА</option>
                                 {% for folder in subfolders %}
-                                    <option value="{{ folder.name }}">📁 {{ folder.name }}</option>
+                                <option value="{{ folder.name }}">📁 {{ folder.name }}</option>
                                 {% endfor %}
                             </select>
                             <div class="select-arrow"></div>
                         </div>
+                        {% endif %}
                     </div>
                     <button type="submit" class="cyber-button scanline">
                         <span class="neon-text">ЗАГРУЗИТЬ</span>
@@ -59,11 +59,11 @@
         <!-- Breadcrumbs -->
         <nav class="cyber-path">
             {% for part in current_path.split('/') if part %}
-                <div class="path-segment">
-                    <span class="segment-line"></span>
-                    <a href="{{ url_for('files', folder_path=part) }}" class="neon-link">{{ part }}</a>
-                    <span class="segment-line"></span>
-                </div>
+            <div class="path-segment">
+                <span class="segment-line"></span>
+                <a href="{{ url_for('files', folder_path=part) }}" class="neon-link">{{ part }}</a>
+                <span class="segment-line"></span>
+            </div>
             {% endfor %}
         </nav>
 
@@ -71,79 +71,34 @@
         <div class="cyber-grid">
             <!-- Folders -->
             {% for folder in subfolders %}
-                <a href="{{ url_for('files', folder_path=folder.full_path) }}" class="folder-link">
-                    <div class="data-node folder-node">
-                        <div class="node-content">
-                            <div class="folder-header">
-                                <div class="hologram-icon pulse">
-                                    <i class="bi bi-folder-fill"></i>
-                                    <div class="folder-glow"></div>
-                                </div>
-                                <div class="folder-stats">
+            <a href="{{ url_for('files', folder_path=folder.full_path) }}" class="folder-link">
+                <div class="data-node folder-node">
+                    <div class="node-content">
+                        <div class="folder-header">
+                            <div class="hologram-icon pulse">
+                                <i class="bi bi-folder-fill"></i>
+                                <div class="folder-glow"></div>
+                            </div>
+                            <div class="folder-stats">
                                     <span class="stat-item">
                                         <i class="bi bi-files"></i>
                                         {{ folder.item_count }}
                                     </span>
-                                    <span class="stat-item">
+                                <span class="stat-item">
                                         <i class="bi bi-clock-history"></i>
                                         {{ folder.modified|datetimeformat }}
                                     </span>
-                                </div>
                             </div>
-                            <div class="node-info">
-                                <h3 class="neon-title">{{ folder.name }}</h3>
-                                <div class="folder-meta">
+                        </div>
+                        <div class="node-info">
+                            <h3 class="neon-title">{{ folder.name }}</h3>
+                            <div class="folder-meta">
                                     <span class="meta-item">
                                         <i class="bi bi-hdd"></i>
                                         {{ folder.size|filesizeformat }}
                                     </span>
-                                    <button class="cyber-delete"
-                                            onclick="deleteItem('folder', '{{ folder.full_path }}', event)">
-                                        <span class="delete-beam"></span>
-                                        УДАЛИТЬ
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="node-glow"></div>
-                    </div>
-                </a>
-            {% endfor %}
-
-            <!-- Files -->
-            {% for file in files %}
-                <div class="data-node file-node">
-                    <div class="node-content">
-                        {% if file.type in ['png', 'jpg', 'jpeg', 'gif'] %}
-                            <a href="{{ url_for('download_file', filename=file.full_path) }}" class="download-link">
-                                <div class="hologram-preview">
-                                    <img src="{{ url_for('serve_file', filename=file.full_path) }}"
-                                         class="holographic-image"
-                                         loading="lazy">
-                                    <div class="preview-overlay">
-                                        <div class="pixel-grid"></div>
-                                        <span class="file-size">{{ file.size|filesizeformat }}</span>
-                                    </div>
-                                </div>
-                            </a>
-                        {% else %}
-                            <a href="{{ url_for('download_file', filename=file.full_path) }}" class="download-link">
-                                <div class="file-hologram">
-                                <div class="file-icon {{ file.type }}"></div>
-                                    <div class="binary-grid"></div>
-                                </div>
-                            </a>
-                        {% endif %}
-                        <div class="node-info">
-                            <div class="file-name">{{ file.name }}</div>
-                            <div class="file-actions">
-                                <a href="{{ url_for('download_file', filename=file.full_path) }}"
-                                   class="cyber-button download-btn scanline">
-                                    <span class="neon-text">⬇️ СКАЧАТЬ</span>
-                                    <div class="button-lines"></div>
-                                </a>
                                 <button class="cyber-delete"
-                                        onclick="deleteItem('file', '{{ file.full_path }}', event)">
+                                        onclick="deleteItem('folder', '{{ folder.full_path }}', event)">
                                     <span class="delete-beam"></span>
                                     УДАЛИТЬ
                                 </button>
@@ -152,6 +107,51 @@
                     </div>
                     <div class="node-glow"></div>
                 </div>
+            </a>
+            {% endfor %}
+
+            <!-- Files -->
+            {% for file in files %}
+            <div class="data-node file-node">
+                <div class="node-content">
+                    {% if file.type in ['png', 'jpg', 'jpeg', 'gif'] %}
+                    <a href="{{ url_for('download_file', filename=file.full_path) }}" class="download-link">
+                        <div class="hologram-preview">
+                            <img src="{{ url_for('serve_file', filename=file.full_path) }}"
+                                 class="holographic-image"
+                                 loading="lazy">
+                            <div class="preview-overlay">
+                                <div class="pixel-grid"></div>
+                                <span class="file-size">{{ file.size|filesizeformat }}</span>
+                            </div>
+                        </div>
+                    </a>
+                    {% else %}
+                    <a href="{{ url_for('download_file', filename=file.full_path) }}" class="download-link">
+                        <div class="file-hologram">
+                            <div class="file-icon {{ file.type }}"></div>
+                            <div class="binary-grid"></div>
+                        </div>
+                    </a>
+                    {% endif %}
+                    <div class="node-info">
+                        <div class="file-name">{{ file.name }}</div>
+                        <div class="file-actions">
+                            <a href="{{ url_for('download_file', filename=file.full_path) }}"
+                               class="cyber-button download-btn scanline">
+                                <span class="neon-text">⬇️ СКАЧАТЬ</span>
+                                <div class="button-lines"></div>
+                            </a>
+                            <button class="cyber-delete"
+                                    onclick="deleteItem('file', '{{ file.full_path }}', event)">
+                                <span class="delete-beam"></span>
+                                УДАЛИТЬ
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="node-glow"></div>
+            </div>
             {% endfor %}
         </div>
 
@@ -176,422 +176,422 @@
 </div>
 
 <style>
-/* Matrix Rain */
-@keyframes matrix {
-    0% { background-position: 0% 0%; }
-    100% { background-position: 0% 100%; }
-}
+    /* Matrix Rain */
+    @keyframes matrix {
+        0% { background-position: 0% 0%; }
+        100% { background-position: 0% 100%; }
+    }
 
-.matrix-rain {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(
-        to bottom,
-        rgba(0, 255, 0, 0.1) 0%,
-        transparent 10%
-    );
-    background-size: 100% 10px;
-    animation: matrix 20s linear infinite;
-    pointer-events: none;
-    z-index: 0;
-}
+    .matrix-rain {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+            to bottom,
+            rgba(0, 255, 0, 0.1) 0%,
+            transparent 10%
+        );
+        background-size: 100% 10px;
+        animation: matrix 20s linear infinite;
+        pointer-events: none;
+        z-index: 0;
+    }
 
-/* Main Container */
-.cyber-container {
-    min-height: 100vh;
-    background: radial-gradient(
-        ellipse at center,
-        #0a0c12 0%,
-        #020203 100%
-    );
-    position: relative;
-    overflow: hidden;
-}
-
-.cyber-main {
-    position: relative;
-    max-width: 1440px;
-    margin: 0 auto;
-    padding: 2rem;
-    z-index: 1;
-}
-
-/* Control Panel */
-.cyber-panel {
-    background: rgba(0, 0, 0, 0.8);
-    border: 2px solid #0daee0;
-    box-shadow: 0 0 40px rgba(13, 174, 224, 0.2);
-    padding: 2rem;
-    margin-bottom: 3rem;
-    position: relative;
-}
-
-.input-row {
-    display: flex;
-    gap: 1rem;
-    width: 100%;
-}
-
-.folder-select-container {
-    position: relative;
-    flex-grow: 1;
-}
-
-.folder-select-container select {
-    appearance: none;
-    width: 100%;
-    padding-right: 2rem;
-    background: #020203;
-    border: 1px solid #0daee0;
-    color: #0daee0;
-    padding: 0.8rem;
-}
-
-.select-arrow {
-    position: absolute;
-    right: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    border: 2px solid #0daee0;
-    border-width: 0 2px 2px 0;
-    padding: 3px;
-    transform: rotate(45deg);
-    pointer-events: none;
-}
-
-/* Modal Styles */
-.cyber-modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.8);
-    z-index: 1000;
-}
-
-.modal-content {
-    position: relative;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: #0a0c12;
-    padding: 2rem;
-    border: 2px solid #ff0000;
-    max-width: 500px;
-}
-
-.modal-buttons {
-    display: flex;
-    gap: 1rem;
-    margin-top: 1.5rem;
-}
-
-.danger {
-    border-color: #ff0000;
-    color: #ff0000;
-}
-
-.neon-title-red {
-    color: #ff0000;
-    text-shadow: 0 0 10px #ff0000;
-}
-
-/* Остальные стили из предыдущей версии */
-.holographic-border {
-    border: 1px solid rgba(13, 174, 224, 0.4);
-    background: linear-gradient(
-        to right,
-        transparent 0%,
-        rgba(13, 174, 224, 0.1) 50%,
-        transparent 100%
-    );
-}
-
-.cyber-button {
-    background: linear-gradient(
-        45deg,
-        #0a0c12 0%,
-        #020203 100%
-    );
-    border: 1px solid #0daee0;
-    color: #0daee0;
-    padding: 1rem 2rem;
-    position: relative;
-    transition: all 0.3s ease;
-    cursor: pointer;
-}
-
-.data-node {
-    background: rgba(0, 0, 0, 0.6);
-    border: 1px solid #0daee0;
-    position: relative;
-    transition: all 0.3s ease;
-}
-
-/* Адаптивность */
-@media (max-width: 768px) {
-    .input-row {
-        flex-direction: column;
+    /* Main Container */
+    .cyber-container {
+        min-height: 100vh;
+        background: radial-gradient(
+            ellipse at center,
+            #0a0c12 0%,
+            #020203 100%
+        );
+        position: relative;
+        overflow: hidden;
     }
 
     .cyber-main {
-        padding: 1rem;
-    }
-
-    .cyber-panel {
-        padding: 1rem;
-    }
-
-    .cyber-grid {
-        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    }
-}
-
-/* Новые стили */
-    .folder-link {
-        text-decoration: none;
-        color: inherit;
-        display: contents;
-    }
-
-    .download-link {
-        text-decoration: none;
-        color: inherit;
-        flex-grow: 1;
-    }
-
-    .file-actions {
-        display: flex;
-        gap: 10px;
-        margin-top: 15px;
-    }
-
-    .download-btn {
-        background: linear-gradient(45deg, #0a0c12 0%, #1a2b3c 100%);
-        border-color: #00ff88;
-        flex-grow: 1;
-    }
-
-    .download-btn .neon-text {
-        color: #00ff88;
-        text-shadow: 0 0 10px #00ff88;
-    }
-
-    /* Контейнер для превью */
-    .hologram-preview {
         position: relative;
-        width: 250px;
-        height: 200px;
-        overflow: hidden;
-        border-radius: 8px;
-        border: 2px solid #00f3ff;
-        box-shadow: 0 0 15px rgba(0, 243, 255, 0.3);
+        max-width: 1440px;
+        margin: 0 auto;
+        padding: 2rem;
+        z-index: 1;
     }
 
-    /* Само изображение */
-    .holographic-image {
+    /* Control Panel */
+    .cyber-panel {
+        background: rgba(0, 0, 0, 0.8);
+        border: 2px solid #0daee0;
+        box-shadow: 0 0 40px rgba(13, 174, 224, 0.2);
+        padding: 2rem;
+        margin-bottom: 3rem;
+        position: relative;
+    }
+
+    .input-row {
+        display: flex;
+        gap: 1rem;
+        width: 100%;
+    }
+
+    .folder-select-container {
+        position: relative;
+        flex-grow: 1;
+    }
+
+    .folder-select-container select {
+        appearance: none;
+        width: 100%;
+        padding-right: 2rem;
+        background: #020203;
+        border: 1px solid #0daee0;
+        color: #0daee0;
+        padding: 0.8rem;
+    }
+
+    .select-arrow {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        border: 2px solid #0daee0;
+        border-width: 0 2px 2px 0;
+        padding: 3px;
+        transform: rotate(45deg);
+        pointer-events: none;
+    }
+
+    /* Modal Styles */
+    .cyber-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
         width: 100%;
         height: 100%;
-        object-fit: cover;
-        transition: transform 0.3s ease;
+        background: rgba(0,0,0,0.8);
+        z-index: 1000;
     }
 
-    /* Иконки для других файлов */
-    .file-hologram {
-        width: 250px;
-        height: 200px;
+    .modal-content {
+        position: relative;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: #0a0c12;
+        padding: 2rem;
+        border: 2px solid #ff0000;
+        max-width: 500px;
+    }
+
+    .modal-buttons {
         display: flex;
-        align-items: center;
-        justify-content: center;
-        background: rgba(0, 243, 255, 0.05);
-        border: 2px solid #00f3ff;
-        border-radius: 8px;
+        gap: 1rem;
+        margin-top: 1.5rem;
     }
 
-    .file-icon {
+    .danger {
+        border-color: #ff0000;
+        color: #ff0000;
+    }
+
+    .neon-title-red {
+        color: #ff0000;
+        text-shadow: 0 0 10px #ff0000;
+    }
+
+    /* Остальные стили из предыдущей версии */
+    .holographic-border {
+        border: 1px solid rgba(13, 174, 224, 0.4);
+        background: linear-gradient(
+            to right,
+            transparent 0%,
+            rgba(13, 174, 224, 0.1) 50%,
+            transparent 100%
+        );
+    }
+
+    .cyber-button {
+        background: linear-gradient(
+            45deg,
+            #0a0c12 0%,
+            #020203 100%
+        );
+        border: 1px solid #0daee0;
+        color: #0daee0;
+        padding: 1rem 2rem;
+        position: relative;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .data-node {
+        background: rgba(0, 0, 0, 0.6);
+        border: 1px solid #0daee0;
+        position: relative;
+        transition: all 0.3s ease;
+    }
+
+    /* Адаптивность */
+    @media (max-width: 768px) {
+        .input-row {
+            flex-direction: column;
+        }
+
+        .cyber-main {
+            padding: 1rem;
+        }
+
+        .cyber-panel {
+            padding: 1rem;
+        }
+
+        .cyber-grid {
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        }
+    }
+
+    /* Новые стили */
+        .folder-link {
+            text-decoration: none;
+            color: inherit;
+            display: contents;
+        }
+
+        .download-link {
+            text-decoration: none;
+            color: inherit;
+            flex-grow: 1;
+        }
+
+        .file-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .download-btn {
+            background: linear-gradient(45deg, #0a0c12 0%, #1a2b3c 100%);
+            border-color: #00ff88;
+            flex-grow: 1;
+        }
+
+        .download-btn .neon-text {
+            color: #00ff88;
+            text-shadow: 0 0 10px #00ff88;
+        }
+
+        /* Контейнер для превью */
+        .hologram-preview {
+            position: relative;
+            width: 250px;
+            height: 200px;
+            overflow: hidden;
+            border-radius: 8px;
+            border: 2px solid #00f3ff;
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.3);
+        }
+
+        /* Само изображение */
+        .holographic-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        /* Иконки для других файлов */
+        .file-hologram {
+            width: 250px;
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 243, 255, 0.05);
+            border: 2px solid #00f3ff;
+            border-radius: 8px;
+        }
+
+        .file-icon {
+            font-size: 4rem;
+            color: #00f3ff;
+            filter: drop-shadow(0 0 10px #00f3ff);
+        }
+
+        /* Адаптивность для мобильных */
+        @media (max-width: 768px) {
+            .hologram-preview,
+            .file-hologram {
+                width: 180px;
+                height: 150px;
+            }
+
+            .file-icon {
+                font-size: 2.5rem;
+            }
+        }
+
+        /* Информация о размере файла */
+        .preview-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 8px;
+            background: rgba(0, 0, 0, 0.7);
+            font-size: 0.8rem;
+        }
+
+        /* Folder Styles */
+    .folder-node {
+        width: 300px;
+        min-height: 200px;
+        border: 2px solid #00f3ff;
+        background: linear-gradient(
+            45deg,
+            rgba(0, 243, 255, 0.05) 0%,
+            rgba(16, 16, 24, 0.8) 100%
+        );
+    }
+
+    .folder-header {
+        position: relative;
+        padding: 1rem;
+        border-bottom: 1px solid rgba(0, 243, 255, 0.3);
+    }
+
+    .hologram-icon {
         font-size: 4rem;
         color: #00f3ff;
-        filter: drop-shadow(0 0 10px #00f3ff);
+        text-align: center;
+        position: relative;
     }
 
-    /* Адаптивность для мобильных */
-    @media (max-width: 768px) {
-        .hologram-preview,
-        .file-hologram {
-            width: 180px;
-            height: 150px;
-        }
-        
-        .file-icon {
-            font-size: 2.5rem;
-        }
-    }
-
-    /* Информация о размере файла */
-    .preview-overlay {
+    .folder-glow {
         position: absolute;
-        bottom: 0;
+        top: 0;
         left: 0;
-        right: 0;
-        padding: 8px;
-        background: rgba(0, 0, 0, 0.7);
-        font-size: 0.8rem;
-    }
-
-    /* Folder Styles */
-.folder-node {
-    width: 300px;
-    min-height: 200px;
-    border: 2px solid #00f3ff;
-    background: linear-gradient(
-        45deg, 
-        rgba(0, 243, 255, 0.05) 0%,
-        rgba(16, 16, 24, 0.8) 100%
-    );
-}
-
-.folder-header {
-    position: relative;
-    padding: 1rem;
-    border-bottom: 1px solid rgba(0, 243, 255, 0.3);
-}
-
-.hologram-icon {
-    font-size: 4rem;
-    color: #00f3ff;
-    text-align: center;
-    position: relative;
-}
-
-.folder-glow {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: radial-gradient(
-        circle at center,
-        rgba(0, 243, 255, 0.2) 0%,
-        transparent 70%
-    );
-}
-
-.folder-stats {
-    display: flex;
-    justify-content: space-around;
-    margin-top: 1rem;
-    padding: 0.5rem;
-    background: rgba(0, 0, 0, 0.3);
-    border-radius: 5px;
-}
-
-.stat-item {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.9rem;
-    color: #00f3ff;
-}
-
-.folder-meta {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 1rem;
-    padding-top: 1rem;
-    border-top: 1px solid rgba(0, 243, 255, 0.2);
-}
-
-.meta-item {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.9rem;
-}
-
-/* Адаптивность */
-@media (max-width: 768px) {
-    .folder-node {
         width: 100%;
-        min-height: 180px;
+        height: 100%;
+        background: radial-gradient(
+            circle at center,
+            rgba(0, 243, 255, 0.2) 0%,
+            transparent 70%
+        );
     }
-    
-    .hologram-icon {
-        font-size: 3rem;
+
+    .folder-stats {
+        display: flex;
+        justify-content: space-around;
+        margin-top: 1rem;
+        padding: 0.5rem;
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 5px;
     }
-    
+
     .stat-item {
-        font-size: 0.8rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.9rem;
+        color: #00f3ff;
     }
-}
+
+    .folder-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid rgba(0, 243, 255, 0.2);
+    }
+
+    .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    /* Адаптивность */
+    @media (max-width: 768px) {
+        .folder-node {
+            width: 100%;
+            min-height: 180px;
+        }
+
+        .hologram-icon {
+            font-size: 3rem;
+        }
+
+        .stat-item {
+            font-size: 0.8rem;
+        }
+    }
 </style>
 
 <script>
-// Delete Confirmation Logic
-let deleteType, deletePath;
+    // Delete Confirmation Logic
+    let deleteType, deletePath;
 
-    function deleteItem(type, path, event) { // Добавляем явный параметр event
-        event.stopPropagation();
-        event.preventDefault(); // Предотвращаем действие по умолчанию
+        function deleteItem(type, path, event) { // Добавляем явный параметр event
+            event.stopPropagation();
+            event.preventDefault(); // Предотвращаем действие по умолчанию
 
-        deleteType = type;
-        deletePath = encodeURIComponent(path); // Кодируем путь
+            deleteType = type;
+            deletePath = encodeURIComponent(path); // Кодируем путь
 
-        document.getElementById('deleteText').textContent =
-            `Вы уверены, что хотите удалить ${type === 'folder' ? 'папку' : 'файл'} "${decodeURIComponent(path).split('/').pop()}"?`;
-        document.getElementById('deleteModal').style.display = 'block';
-    }
+            document.getElementById('deleteText').textContent =
+                `Вы уверены, что хотите удалить ${type === 'folder' ? 'папку' : 'файл'} "${decodeURIComponent(path).split('/').pop()}"?`;
+            document.getElementById('deleteModal').style.display = 'block';
+        }
 
-    function confirmDelete() {
-        fetch('/delete', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                type: deleteType,
-                path: deletePath
-            })
-        }).then(response => {
-            if (response.ok) {
-                location.reload();
-            } else {
-                response.json().then(data => {
-                    alert('Ошибка: ' + (data.error || 'Неизвестная ошибка'));
-                });
-            }
-        }).catch(error => {
-            console.error('Error:', error);
-            alert('Сетевая ошибка');
-        });
-        cancelDelete();
-    }
-
-    function cancelDelete() {
-        document.getElementById('deleteModal').style.display = 'none';
-    }
-
-    // Close modal on outside click
-    window.onclick = function(event) {
-        if (event.target === document.getElementById('deleteModal')) {
+        function confirmDelete() {
+            fetch('/delete', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    type: deleteType,
+                    path: deletePath
+                })
+            }).then(response => {
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    response.json().then(data => {
+                        alert('Ошибка: ' + (data.error || 'Неизвестная ошибка'));
+                    });
+                }
+            }).catch(error => {
+                console.error('Error:', error);
+                alert('Сетевая ошибка');
+            });
             cancelDelete();
         }
-    }
 
-// Button Hover Effects
-document.querySelectorAll('.cyber-button').forEach(button => {
-    button.addEventListener('mousemove', e => {
-        const rect = button.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        button.style.setProperty('--x', `${x}px`);
-        button.style.setProperty('--y', `${y}px`);
+        function cancelDelete() {
+            document.getElementById('deleteModal').style.display = 'none';
+        }
+
+        // Close modal on outside click
+        window.onclick = function(event) {
+            if (event.target === document.getElementById('deleteModal')) {
+                cancelDelete();
+            }
+        }
+
+    // Button Hover Effects
+    document.querySelectorAll('.cyber-button').forEach(button => {
+        button.addEventListener('mousemove', e => {
+            const rect = button.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            button.style.setProperty('--x', `${x}px`);
+            button.style.setProperty('--y', `${y}px`);
+        });
     });
-});
 </script>
 {% endblock %}
