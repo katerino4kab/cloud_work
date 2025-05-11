@@ -8,14 +8,14 @@ import sqlalchemy as sa  # SQLAlchemy для работы с базой данн
 from urllib.parse import urlsplit, unquote  # Для анализа URL
 from werkzeug.utils import secure_filename
 
-
 # Импорт компонентов приложения
 from app import app, db, login  # Экземпляры приложения, БД и менеджера авторизации
-from app.forms import LoginForm, RegisterForm, UploadFileForm # Формы WTForms
+from app.forms import LoginForm, RegisterForm, UploadFileForm  # Формы WTForms
 from app.models import CloudFile, Folder, User  # Модель пользователя
 from io import BytesIO
 
 app.config[('UPLOAD_FOLDER')] = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'static/uploads')
+
 
 @app.route('/uploads/<path:filename>')
 @login_required
@@ -56,36 +56,36 @@ def index():
     return render_template('index.html')
 
 
-@app.route('/login', methods = ["GET","POST"])
+@app.route('/login', methods=["GET", "POST"])
 def login():
     if current_user.is_authenticated:
         return redirect(url_for("index", username=current_user.login))
 
     form = LoginForm()
     if form.validate_on_submit():
-        user = db.session.scalar(sa.select(User).where (User.login == form.username.data))
+        user = db.session.scalar(sa.select(User).where(User.login == form.username.data))
         if user is None or not user.check_password(form.password.data):
             flash("invalid username or password")
-            return redirect (url_for("login"))
-        login_user(user, remember = form.remember_me.data)
+            return redirect(url_for("login"))
+        login_user(user, remember=form.remember_me.data)
         next_page = request.args.get("next")
         if not next_page or urlsplit(next_page).netloc != "":
             next_page = url_for("index", username=user.login)
         return redirect(next_page)
-    return render_template("login.html",title = "Persik", form = form)
+    return render_template("login.html", title="Persik", form=form)
 
 
-@app.route('/register', methods = ["GET","POST"])
+@app.route('/register', methods=["GET", "POST"])
 def register_endpoint():
     form = RegisterForm()
     if form.validate_on_submit():
-        user = User(login = form.username.data)
+        user = User(login=form.username.data)
         user.set_password(form.password.data)
         db.session.add(user)
         db.session.commit()
         flash("Поздравляем с регистрацией!")
-        return redirect (url_for("login"))
-    return render_template("register.html", form = form)
+        return redirect(url_for("login"))
+    return render_template("register.html", form=form)
 
 
 @app.route('/logout')
@@ -97,6 +97,7 @@ def logout():
 @app.route('/bootstrap')
 def show_bootstrap():
     return render_template('bootstrap.html')
+
 
 # Профиль пользователя
 @app.route('/profile')
@@ -197,6 +198,7 @@ def delete_item():
         app.logger.error(f"Delete error: {str(e)}")
         return jsonify({'error': 'Internal server error'}), 500
 
+
 @app.route('/files', methods=['GET', 'POST'])
 @app.route('/files/<path:folder_path>', methods=['GET', 'POST'])
 @login_required
@@ -211,16 +213,13 @@ def files(folder_path=None):
     # Обработка загрузки файла
     if form.validate_on_submit():
         file = form.file.data
-        target_folder = request.form.get('target_folder')
+        target_folder = request.form.get('target_folder', '')  # Пустая строка по умолчанию
 
         if file:
             filename = secure_filename(file.filename)
 
             # Определяем путь для сохранения
-            if target_folder:
-                save_dir = os.path.join(current_dir, target_folder)
-            else:
-                save_dir = current_dir
+            save_dir = os.path.join(current_dir, target_folder) if target_folder else current_dir
 
             # Создаем целевую директорию если не существует
             os.makedirs(save_dir, exist_ok=True)
@@ -247,7 +246,7 @@ def files(folder_path=None):
     # Формируем данные для отображения
     subfolders = []
     files = []
-           
+
     for item in items:
         item_path = os.path.join(current_dir, item)
         rel_path = os.path.join(folder_path, item) if folder_path else item
@@ -283,7 +282,7 @@ def files(folder_path=None):
                            current_path=folder_path or '',
                            form=form)
 
-    
+
 def get_folder_size(start_path):
     total_size = 0
     for dirpath, dirnames, filenames in os.walk(start_path):
@@ -339,4 +338,3 @@ def datetimeformat_filter(value, format='%d.%m.%Y %H:%M'):
         return datetime.datetime.fromtimestamp(value).strftime(format)
     except TypeError:
         return str(value)
-
