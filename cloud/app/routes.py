@@ -151,51 +151,47 @@ def delete_item():
             return jsonify({'error': 'Invalid request'}), 400
 
         item_type = data.get('type')
-        encoded_path = data.get('path')
+        path_components = data.get('path').split('/')  
 
-        if not item_type or not encoded_path:
+        if not item_type or not path_components:
             return jsonify({'error': 'Missing parameters'}), 400
 
-        # Декодируем и нормализуем путь
-        item_path = unquote(encoded_path).replace('\\', '/')
+        full_path = os.path.join(
+            app.config['UPLOAD_FOLDER'],  
+            str(current_user.id),        
+            *path_components              
+        )
+        full_path = os.path.normpath(full_path)  # Нормализуем путь
 
-        # Формируем абсолютный путь
-        base_dir = os.path.abspath(app.config['UPLOAD_FOLDER'])
-        target_path = os.path.join(base_dir, item_path)
-
-        app.logger.info(f"User ID: {current_user.id}")
-        app.logger.info(f"Base dir: {base_dir}")
-        app.logger.info(f"Item path: {item_path}")
-        app.logger.info(f"Target path: {target_path}")
-        app.logger.info(f"Path exists: {os.path.exists(target_path)}")
-
-        if not os.path.exists(target_path):
-            app.logger.error(f"Path not found: {target_path}")
-            return jsonify({'error': 'Path not found'}), 404
+        # Базовый путь для проверки безопасности
+        base_dir = os.path.abspath(os.path.join(app.config['UPLOAD_FOLDER'], str(current_user.id)))
 
         # Проверка безопасности
-        if not target_path.startswith(base_dir):
-            app.logger.error(f"Security violation: {target_path}")
+        if not os.path.abspath(full_path).startswith(base_dir):
+            app.logger.error(f"Security violation: {full_path} not in {base_dir}")
             return jsonify({'error': 'Access denied'}), 403
 
         # Проверка существования
-        if not os.path.exists(target_path):
+        if not os.path.exists(full_path):
+            app.logger.error(f"Path not found: {full_path}")
             return jsonify({'error': 'Path not found'}), 404
 
         # Удаление
-        if item_type == 'folder':
-            if not os.path.isdir(target_path):
-                return jsonify({'error': 'Not a directory'}), 400
-            shutil.rmtree(target_path)
-        else:
-            if not os.path.isfile(target_path):
-                return jsonify({'error': 'Not a file'}), 400
-            os.remove(target_path)
+        try:
+            if item_type == 'folder':
+                shutil.rmtree(full_path)
+            else:
+                os.remove(full_path)
+            
+            app.logger.info(f"Successfully deleted {item_type}: {full_path}")
+            return jsonify({'status': 'success'}), 200
 
-        return jsonify({'status': 'success'}), 200
+        except Exception as e:
+            app.logger.error(f"Delete failed: {str(e)}")
+            return jsonify({'error': str(e)}), 500
 
     except Exception as e:
-        app.logger.error(f"Delete error: {str(e)}")
+        app.logger.error(f"Server error: {str(e)}")
         return jsonify({'error': 'Internal server error'}), 500
 
 
